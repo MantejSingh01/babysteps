@@ -318,11 +318,6 @@ button:disabled {
     gap: 64px;
     padding-top: 24px;
   }
-
-  /* The sample card sits on the page like a card left on a table. */
-  .welcome-sample .vcard {
-    transform: rotate(1.5deg);
-  }
 }
 
 /* Dashboard */

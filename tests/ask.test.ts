@@ -112,6 +112,18 @@ describe('answers', () => {
     expect(sent.contents.map((c: { role: string }) => c.role)).toEqual(['user', 'model', 'user']);
   });
 
+  it('sends the key as the `key` query parameter, not a header', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => geminiStream([event('ok')]));
+    vi.stubGlobal('fetch', fetchMock);
+    await post(question);
+
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
+    const sentUrl = new URL(String(url));
+    expect(sentUrl.searchParams.get('key')).toBe('test-key');
+    expect(sentUrl.searchParams.get('alt')).toBe('sse');
+    expect(init?.headers).not.toHaveProperty('x-goog-api-key');
+  });
+
   it('turns an upstream failure into a 502 with a readable message', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.stubGlobal(
@@ -120,7 +132,32 @@ describe('answers', () => {
     );
     const res = await post(question);
     expect(res.status).toBe(502);
-    expect(await res.json()).toEqual({ error: expect.stringContaining('Try again') });
+    expect(await res.json()).toEqual({
+      error: expect.stringContaining('Try again'),
+      upstream: { status: 429, reason: null },
+    });
+  });
+
+  it("reports Google's reason code, but not its message, when the key is rejected", async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const googleError = {
+      error: {
+        code: 401,
+        message: 'Request had invalid credentials for project 1234.',
+        status: 'UNAUTHENTICATED',
+        details: [
+          { '@type': 'type.googleapis.com/google.rpc.ErrorInfo', reason: 'ACCESS_TOKEN_TYPE_UNSUPPORTED' },
+        ],
+      },
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json(googleError, { status: 401 })),
+    );
+
+    const body = await (await post(question)).json();
+    expect(body.upstream).toEqual({ status: 401, reason: 'ACCESS_TOKEN_TYPE_UNSUPPORTED' });
+    expect(JSON.stringify(body)).not.toContain('project 1234');
   });
 });
 

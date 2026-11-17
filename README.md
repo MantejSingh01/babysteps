@@ -63,7 +63,7 @@ npx netlify-cli dev     # app and /api/ask on http://localhost:8888
 
 Import the repo in Netlify; `netlify.toml` already has the build settings. Then add `GEMINI_API_KEY` under
 Site configuration → Environment variables and redeploy. `GEMINI_MODEL` is optional and defaults to
-`gemini-2.5-flash`.
+`gemini-3.5-flash-lite`.
 
 ## How I built it
 

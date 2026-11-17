@@ -108,6 +108,16 @@ export function textFromEvent(line: string): string {
   }
 }
 
+// Google errors look like { error: { status: 'UNAUTHENTICATED', details: [{ reason: 'API_KEY_INVALID' }] } }.
+export function upstreamReason(body: string): string | null {
+  try {
+    const { error } = JSON.parse(body) as { error?: { status?: string; details?: { reason?: string }[] } };
+    return error?.details?.find((d) => d.reason)?.reason ?? error?.status ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function toPlainTextStream(events: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
   const reader = events.getReader();
   const decoder = new TextDecoder();
@@ -162,36 +172,44 @@ export default async function handler(req: Request, context: { ip?: string }): P
   const parsed = parseRequest(body);
   if (!parsed.ok) return json(400, { error: parsed.error });
 
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+  // Newer AI Studio keys (prefixed "AQ.") are rejected in the x-goog-api-key header on some accounts,
+  // so the key goes in the `key` query parameter, which Google documents for both key formats.
+  const endpoint = new URL(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent`,
+  );
+  endpoint.searchParams.set('alt', 'sse');
+  endpoint.searchParams.set('key', apiKey);
+
   let upstream: Response;
   try {
-    upstream = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt(parsed.child) }] },
-          contents: parsed.messages.map((m) => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }],
-          })),
-          generationConfig: { temperature: 0.6, maxOutputTokens: 2048 },
-        }),
-        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-      },
-    );
+    upstream = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt(parsed.child) }] },
+        contents: parsed.messages.map((m) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }],
+        })),
+        generationConfig: { temperature: 0.6, maxOutputTokens: 2048 },
+      }),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
   } catch {
     return json(504, { error: 'The answer took too long. Try again.' });
   }
 
   if (!upstream.ok || !upstream.body) {
-    console.error(`Gemini responded ${upstream.status}: ${await upstream.text().catch(() => '')}`);
+    const detail = await upstream.text().catch(() => '');
+    console.error(`Gemini responded ${upstream.status}: ${detail}`);
     const error =
       upstream.status === 429
         ? 'Lots of people are asking right now. Try again in a minute.'
         : 'Answers are unavailable right now. Try again later.';
-    return json(502, { error });
+    // Status and reason codes (never Google's message text) make a misconfigured key diagnosable from
+    // the browser on hosts where function logs aren't kept.
+    return json(502, { error, upstream: { status: upstream.status, reason: upstreamReason(detail) } });
   }
 
   return new Response(toPlainTextStream(upstream.body), {
