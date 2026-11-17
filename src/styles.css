@@ -1,0 +1,746 @@
+/*
+  Palette
+  paper     #f3f6f4  page background
+  ink       #1c2733  text
+  stamp     #2b59a8  card header, stamps, primary actions (the blue of a clinic's rubber stamp)
+  turmeric  #e2a524  the visit that is due now
+  leaf      #2d7a57  ticked items
+  alert     #b3261e  overdue
+*/
+:root {
+  --paper: #f3f6f4;
+  --surface: #ffffff;
+  --ink: #1c2733;
+  --ink-muted: #56626f;
+  --rule: #d7dfdb;
+  --stamp: #2b59a8;
+  --stamp-ink: #2b59a8;
+  --on-stamp: #ffffff;
+  --turmeric: #e2a524;
+  --turmeric-wash: #fbf1d9;
+  --turmeric-ink: #7a5200;
+  --leaf: #2d7a57;
+  --alert: #b3261e;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #172230;
+    --surface: #1e2b3a;
+    --ink: #e7ecf1;
+    --ink-muted: #a6b2bf;
+    --rule: #304054;
+    --stamp: #2f5ea8;
+    --stamp-ink: #8fb0f2;
+    --on-stamp: #ffffff;
+    --turmeric: #f0be4b;
+    --turmeric-wash: #3a3220;
+    --turmeric-ink: #f0be4b;
+    --leaf: #6cc59a;
+    --alert: #f2918a;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3,
+p,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+:focus-visible {
+  outline: 3px solid var(--turmeric);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Page frame */
+
+.page {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 28px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.logo {
+  fill: var(--stamp-ink);
+}
+
+.colophon {
+  max-width: 70ch;
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.colophon p + p {
+  margin-top: 6px;
+}
+
+/* Controls */
+
+.button {
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 20px;
+  background: var(--stamp);
+  color: var(--on-stamp);
+  font-weight: 700;
+}
+
+.button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.button-quiet {
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  padding: 7px 14px;
+  background: transparent;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.button-on-blue {
+  border: 1.5px solid rgb(255 255 255 / 0.7);
+  border-radius: 8px;
+  padding: 7px 14px;
+  background: transparent;
+  color: var(--on-stamp);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.text-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--stamp-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.field input,
+.composer textarea {
+  width: 100%;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  padding: 11px 13px;
+  background: var(--surface);
+  font-weight: 400;
+}
+
+.field input:focus,
+.composer textarea:focus {
+  border-color: var(--stamp-ink);
+  outline: none;
+}
+
+.form-error {
+  color: var(--alert);
+  font-weight: 700;
+}
+
+.fine-print {
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+/* Square tick boxes, shared by the vaccination card and the milestone list */
+
+.tick {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.tick input {
+  appearance: none;
+  flex: none;
+  display: grid;
+  place-content: center;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  border: 2px solid var(--ink-muted);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.tick input:checked {
+  border-color: var(--leaf);
+  background: var(--leaf);
+}
+
+.tick input:checked::after {
+  content: '';
+  width: 5px;
+  height: 10px;
+  margin-top: -2px;
+  border: solid var(--surface);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+/* Welcome */
+
+.welcome {
+  display: grid;
+  gap: 40px;
+}
+
+.welcome h1 {
+  max-width: 18ch;
+  font-size: clamp(2rem, 5vw, 2.9rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.lede {
+  max-width: 52ch;
+  margin-top: 16px;
+  color: var(--ink-muted);
+  font-size: 1.125rem;
+}
+
+.welcome-form {
+  display: grid;
+  gap: 16px;
+  max-width: 400px;
+  margin-top: 28px;
+}
+
+.welcome-form .button {
+  justify-self: start;
+}
+
+.demo-line {
+  margin: 20px 0 8px;
+}
+
+/* The sample only needs to show the idea, so it drops the per-dose detail to stay short. */
+.welcome-sample .shot-note {
+  display: none;
+}
+
+.welcome-sample .shots {
+  gap: 2px;
+}
+
+.welcome-sample figcaption {
+  margin-top: 14px;
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .welcome {
+    grid-template-columns: 1fr minmax(0, 500px);
+    align-items: start;
+    gap: 64px;
+    padding-top: 24px;
+  }
+
+  /* The sample card sits on the page like a card left on a table. */
+  .welcome-sample .vcard {
+    transform: rotate(1.5deg);
+  }
+}
+
+/* Dashboard */
+
+.dashboard {
+  display: grid;
+  gap: 40px;
+}
+
+.dashboard-main {
+  display: grid;
+  gap: 32px;
+  align-content: start;
+  min-width: 0;
+}
+
+.summary h1 {
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.summary p {
+  max-width: 60ch;
+  margin-top: 8px;
+  font-size: 1.125rem;
+}
+
+@media (min-width: 980px) {
+  .dashboard {
+    grid-template-columns: minmax(0, 1fr) 380px;
+    align-items: start;
+  }
+
+  .ask {
+    position: sticky;
+    top: 20px;
+    height: min(720px, calc(100vh - 40px));
+  }
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-head h2 {
+  font-size: 1.375rem;
+  font-weight: 800;
+}
+
+.section-note {
+  margin-top: 4px;
+  color: var(--ink-muted);
+}
+
+/* Vaccination card: the one element meant to look like a physical object */
+
+.vcard {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 18px 30px -24px rgb(28 39 51 / 0.45);
+}
+
+.vcard-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--stamp);
+  color: var(--on-stamp);
+}
+
+.vcard-head h2,
+.vcard-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.vcard-head p:not(.vcard-title) {
+  font-size: 0.9375rem;
+  opacity: 0.9;
+}
+
+.vcard-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--turmeric-wash);
+  color: var(--turmeric-ink);
+  font-weight: 700;
+}
+
+.vtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.vtable th,
+.vtable td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.vtable thead th {
+  padding-block: 10px;
+  border-top: 0;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.vtable tbody th {
+  white-space: nowrap;
+}
+
+.vtable .given-col,
+.given-cell {
+  width: 76px;
+  text-align: center;
+}
+
+.shots {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shots-folded {
+  color: var(--ink-muted);
+}
+
+.shots-folded .text-button {
+  margin-left: 4px;
+  font-size: 0.875rem;
+}
+
+.shot-for {
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.shot-note {
+  display: block;
+  margin-left: 30px;
+  color: var(--turmeric-ink);
+  font-size: 0.8125rem;
+}
+
+.due-cell {
+  white-space: nowrap;
+}
+
+.due-cell time,
+.when {
+  display: block;
+}
+
+.when {
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.partial {
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.vtable tr.is-due {
+  background: var(--turmeric-wash);
+}
+
+.vtable tr.is-due > th {
+  box-shadow: inset 4px 0 0 var(--turmeric);
+}
+
+.vtable tr.is-due .when {
+  color: var(--turmeric-ink);
+  font-weight: 700;
+}
+
+.vtable tr.is-overdue .when {
+  color: var(--alert);
+  font-weight: 700;
+}
+
+.vtable tr.is-done :is(th, .shots, time) {
+  color: var(--ink-muted);
+}
+
+.stamp {
+  display: inline-block;
+}
+
+.stamp-mark {
+  width: 44px;
+  height: 44px;
+  fill: none;
+  stroke: var(--stamp-ink);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+.stamp-mark.is-fresh {
+  animation: stamp-press 300ms cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+
+@keyframes stamp-press {
+  from {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+/* On narrow screens each visit becomes a stacked block: age and stamp on top, then due date, then vaccines. */
+@media (max-width: 640px) {
+  .vtable thead {
+    display: none;
+  }
+
+  .vtable tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'age given'
+      'due given'
+      'shots shots';
+    padding: 14px 16px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .vtable tbody th,
+  .vtable td {
+    padding: 0;
+    border: 0;
+  }
+
+  .vtable tbody th {
+    grid-area: age;
+  }
+
+  .due-cell {
+    grid-area: due;
+  }
+
+  .shots-cell {
+    grid-area: shots;
+    margin-top: 10px;
+  }
+
+  .given-cell {
+    grid-area: given;
+    width: auto;
+  }
+
+  .due-cell time,
+  .when {
+    display: inline;
+  }
+
+  .when:not(:empty)::before {
+    content: ', ';
+  }
+
+  .vtable tr.is-due > th {
+    box-shadow: none;
+  }
+
+  .vtable tr.is-due {
+    box-shadow: inset 4px 0 0 var(--turmeric);
+  }
+}
+
+/* Milestones */
+
+.milestones h3 {
+  margin-top: 24px;
+  font-size: 1.0625rem;
+}
+
+.tally {
+  color: var(--leaf);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.checklist {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checklist input:checked + span {
+  color: var(--ink-muted);
+}
+
+.upcoming-list {
+  margin: 8px 0 20px;
+  padding-left: 22px;
+  color: var(--ink-muted);
+}
+
+.upcoming-list li + li {
+  margin-top: 4px;
+}
+
+/* Ask panel */
+
+.ask {
+  display: flex;
+  flex-direction: column;
+  min-height: 480px;
+  padding: 20px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.thread {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 220px;
+  margin-top: 16px;
+  padding-bottom: 12px;
+  overflow-y: auto;
+}
+
+.starters {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.starters button {
+  width: 100%;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: none;
+  text-align: left;
+}
+
+.starters button:hover:not(:disabled) {
+  border-color: var(--stamp-ink);
+}
+
+.message {
+  max-width: 90%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+
+.message.from-user {
+  align-self: flex-end;
+  background: var(--stamp);
+  color: var(--on-stamp);
+  white-space: pre-wrap;
+}
+
+.message.from-assistant {
+  align-self: flex-start;
+  background: var(--paper);
+}
+
+.answer > * + * {
+  margin-top: 8px;
+}
+
+.answer ul,
+.answer ol {
+  margin-bottom: 0;
+  padding-left: 20px;
+}
+
+.thinking {
+  color: var(--ink-muted);
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.composer textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+}
+
+.ask .form-error {
+  margin-top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp-mark.is-fresh {
+    animation: none;
+  }
+}
